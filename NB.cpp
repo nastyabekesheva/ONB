@@ -29,9 +29,11 @@ FieldElement NBGaluaField::mul(FieldElement &a, FieldElement &b)
     FieldElement ac = a;
     FieldElement bc = b;
     
-    for (uint64_t i = 1; i < 173; ++i)
+    for (uint64_t i = 0; i < 173; ++i)
     {
         uint64_t tmp = mul_one(ac, bc);
+        ac = (cycle_shift_left(ac));
+        bc = (cycle_shift_left(bc));
         res.setbit(tmp, i);
     }
     
@@ -92,7 +94,7 @@ FieldElement NBGaluaField::trace(FieldElement &a)
             }
         }
     }
-    res.set(counter, 0);
+    res.set(counter % 2, 0);
     
     return res;
 }
@@ -150,15 +152,15 @@ FieldElement NBGaluaField::cycle_shift_left(FieldElement &a)
 uint64_t NBGaluaField::mul_one(FieldElement &a, FieldElement &b)
 {
     
-    a = (cycle_shift_left(a));
-    b = (cycle_shift_left(b));
+
     
     FieldElement al;
     FieldElement alb_i;
     FieldElement result;
     
+    //std::cout << to_bin(b) << std::endl;
     
-    for (int i = 0; i < 173; ++i)
+    /*for (int i = 0; i < 173; ++i)
     {
         uint64_t al_mul_i = 0;
         for (uint64_t j : _mul_matrix[i])
@@ -166,26 +168,26 @@ uint64_t NBGaluaField::mul_one(FieldElement &a, FieldElement &b)
             al_mul_i ^= a.getbit(j);
         }
         al.setbit(al_mul_i, i);
-    }
+    }*/
     /*for (int i = 0; i < 173; ++i)
     {
         for (int j = 0; j < 173; ++j)
         {
-            al.setbit((al.getbit(j) ^ (_mul_matrix[i].getbit(j) & a.getbit(i))), j);
+            al.setbit((al.getbit(i) ^ (_mul_matrix[j].getbit(i) & a.getbit(j))), i);
         }
     }*/
     
     
-    /*for (int i = 0; i < 173; ++i)
+    for (int i = 0; i < 173; ++i)
     {
         if (a.getbit(i) == 1)
         {
-            for (auto j: _mul_matrix[172-i])
+            for (auto j: _mul_matrix[i])
             {
                 al.setbit((al.getbit(j) ^ 1), j);
             }
         }
-    }*/
+    }
     /*
     for (int i = 0; i < 3; ++i)
     {
@@ -207,13 +209,16 @@ uint64_t NBGaluaField::mul_one(FieldElement &a, FieldElement &b)
 
 FieldElement NBGaluaField::pow(FieldElement &a,  FieldElement &b)
 {
-    FieldElement result("1");
-    for (int i = 0; i < bit_length(b); ++i)
+    FieldElement result = neu_mul();
+
+    
+    for (int i = bit_length(b) - 1; i >= 0; --i)
     {
         result = square(result);
-        std::cout << to_bin(result) << std::endl <<  b.getbit(i) << std::endl;
+        
         if (b.getbit(i) == 1)
         {
+            
             result = mul(a, result);
         }
     }
@@ -244,7 +249,6 @@ std::size_t NBGaluaField::bit_length(FieldElement &a)
         }
         
         return (j+64*(k));
-        //return j;
     }
     
     
@@ -267,20 +271,6 @@ uint64_t NBGaluaField::check_ij(int i, int j)
     return 0;
 }
 
-/*uint64_t NBGaluaField::pow2(uint64_t i)
-{
-    uint64_t res = 1;
-    uint64_t i_1 = i / 63;
-    uint64_t i_2 = i % 63;
-    
-    for (int j = 0; j < i_1; ++j)
-    {
-        res = (res << 63) % p;
-    }
-    res = (res << i_2) % p;
-    
-    return res;
-}*/
 
 FieldElement NBGaluaField::neu_add()
 {
@@ -289,5 +279,13 @@ FieldElement NBGaluaField::neu_add()
 
 FieldElement NBGaluaField::neu_mul()
 {
-    return FieldElement("1");
+    return FieldElement("11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111");
 }
+
+FieldElement NBGaluaField::inverse(FieldElement &a)
+{
+    FieldElement e("01111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111");
+    return  pow(a, e);
+
+}
+
